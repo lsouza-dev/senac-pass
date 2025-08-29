@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model clientes {
+  id_cliente Int         @id @default(autoincrement())
+  nome       String      @db.VarChar(100)
+  email      String      @unique(map: "email") @db.VarChar(255)
+  cpf        String      @db.VarChar(11)
+  telefone   String?     @db.VarChar(11)
+  ativo      Boolean     @default(true)
+  ingressos  ingressos[]
+}
+
+model eventos {
+  id_evento      Int         @id @default(autoincrement())
+  nome           String      @db.VarChar(100)
+  descricao      String      @db.VarChar(255)
+  local          String      @db.VarChar(255)
+  dt_inicio      DateTime?   @default(now()) @db.DateTime(0)
+  dt_fim         DateTime?   @db.DateTime(0)
+  capacidade_max Int         @default(5000)
+  ingressos      ingressos[]
+  setores        setores[]
+}
+
+model ingressos {
+  id_ingresso  String    @id @db.VarChar(50)
+  id_cliente   Int
+  id_usuario   Int
+  id_evento    Int
+  id_setor     Int
+  status       String?   @default("Não validado") @db.VarChar(20)
+  dt_criacao   DateTime? @default(now()) @db.DateTime(0)
+  dt_validacao DateTime? @db.DateTime(0)
+  clientes     clientes  @relation(fields: [id_cliente], references: [id_cliente], onUpdate: NoAction, map: "fk_ingressos_clientes")
+  eventos      eventos   @relation(fields: [id_evento], references: [id_evento], onUpdate: NoAction, map: "fk_ingressos_eventos")
+  setores      setores   @relation(fields: [id_setor], references: [id_setor], onUpdate: NoAction, map: "fk_ingressos_setores")
+  usuarios     usuarios  @relation(fields: [id_usuario], references: [id_usuario], onUpdate: NoAction, map: "fk_ingressos_usuarios")
+
+  @@index([id_cliente], map: "fk_ingressos_clientes")
+  @@index([id_evento], map: "fk_ingressos_eventos")
+  @@index([id_setor], map: "fk_ingressos_setores")
+  @@index([id_usuario], map: "fk_ingressos_usuarios")
+}
+
+model ingressos_auditoria {
+  id_auditoria    Int       @id @default(autoincrement())
+  id_evento       Int
+  id_setor        Int
+  id_usuario      Int
+  id_cliente      Int
+  operacao        String    @db.VarChar(10)
+  ingresso_status String?   @default("Não validado") @db.VarChar(20)
+  dt_registro     DateTime? @default(now()) @db.DateTime(0)
+}
+
+model perfis {
+  id_perfil Int        @id @default(autoincrement())
+  descricao String     @db.VarChar(50)
+  usuarios  usuarios[]
+}
+
+model setores {
+  id_setor         Int         @id @default(autoincrement())
+  nome             String      @db.VarChar(100)
+  descricao        String      @db.VarChar(255)
+  capacidade_max   Int         @default(5000)
+  capacidade_atual Int         @default(0)
+  id_evento        Int
+  ingressos        ingressos[]
+  eventos          eventos     @relation(fields: [id_evento], references: [id_evento], onDelete: Cascade, onUpdate: NoAction, map: "fk_setores_eventos")
+
+  @@index([id_evento], map: "fk_setores_eventos")
+}
+
+model usuarios {
+  id_usuario Int         @id @default(autoincrement())
+  nome       String      @db.VarChar(100)
+  email      String      @unique(map: "email") @db.VarChar(255)
+  senha      String      @db.VarChar(255)
+  cpf        String      @db.VarChar(11)
+  ativo      Boolean     @default(true)
+  id_perfil  Int
+  ingressos  ingressos[]
+  perfis     perfis      @relation(fields: [id_perfil], references: [id_perfil], onUpdate: NoAction, map: "fk_usuarios_perfil")
+
+  @@index([id_perfil], map: "fk_usuarios_perfil")
+}

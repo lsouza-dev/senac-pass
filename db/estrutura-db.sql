@@ -23,12 +23,7 @@ create table eventos(
 id_evento int not null auto_increment primary key,
 nome varchar(100) not null,
 descricao varchar(255) not null,
-cidade varchar(100) not null,
-uf varchar(5) not null,
-bairro varchar(100) not null,
-rua varchar(100) not null,
-numero varchar(10) ,
-complemento varchar(50),
+local varchar(255) not null,
 dt_inicio datetime default current_timestamp(),
 dt_fim datetime,
 capacidade_max int not null default 5000
